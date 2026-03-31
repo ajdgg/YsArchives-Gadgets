@@ -48,7 +48,7 @@
 				// structuredChangeFilters.ui.initialized is just on load
 				mw.hook('wikipage.content').add((item) => {
 					if (item.is('div')) {
-						Twinkle.fluff.addLinks.recentchanges();
+						Twinkle.fluff.addLinks.recentchanges(item);
 					}
 				});
 			}
@@ -182,26 +182,34 @@
 				}
 			}
 		},
-		recentchanges: () => {
+		recentchanges: ($content) => {
 			if (
 				(mw.config.get('wgCanonicalSpecialPageName') === 'Recentchanges' &&
 					Twinkle.getPref('showRollbackLinks').includes('recentchanges')) ||
 				(mw.config.get('wgCanonicalSpecialPageName') === 'Recentchangeslinked' &&
 					Twinkle.getPref('showRollbackLinks').includes('recentchangeslinked'))
 			) {
+				const $root = $content && $content.length ? $content : $body;
 				// Latest and revertable (not page creations, logs, categorizations, etc.)
-				let $list = $body.find('.mw-changeslist .mw-changeslist-last.mw-changeslist-src-mw-edit');
+				let $list = $root.find('.mw-changeslist .mw-changeslist-last.mw-changeslist-src-mw-edit');
 				// Exclude top-level header if "group changes" preference is used
 				// and find only individual lines or nested lines
 				$list = $list
 					.not('.mw-rcfilters-ui-highlights-enhanced-toplevel')
 					.find('.mw-changeslist-line-inner, td.mw-enhanced-rc-nested');
 				$list.each((_key, current) => {
+					const href = $(current).find('.mw-changeslist-diff').attr('href');
+					const rev = mw.util.getParamValue('diff', href);
+					if (rev && current.querySelector(`#tw-revert${rev}`)) {
+						return;
+					}
+					if (!rev && current.querySelector('#tw-revert')) {
+						return;
+					}
+
 					// The :not is possibly unnecessary, as it appears that
 					// .mw-userlink is simply not present if the username is hidden
 					const vandal = $(current).find('.mw-userlink:not(.history-deleted)').text();
-					const href = $(current).find('.mw-changeslist-diff').attr('href');
-					const rev = mw.util.getParamValue('diff', href);
 					const page = current.dataset.targetPage;
 					current.appendChild(Twinkle.fluff.linkBuilder.rollbackLinks(vandal, true, rev, page));
 				});

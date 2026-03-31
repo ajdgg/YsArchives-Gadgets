@@ -32,7 +32,7 @@ const markBlockedUserLinks = (userLinks: Record<string, JQuery[]>) => {
 	users = usersToQuery;
 
 	// Local and global user block queries
-	for (let i = 0; i < users.length; i++) {
+	while (users.length) {
 		const bkusers = users.splice(0, 25);
 		if (!bkusers.length) {
 			continue;
@@ -84,7 +84,7 @@ const markBlockedIPLinks = (userLinks: Record<string, JQuery[]>) => {
 	const promises: (() => Promise<void>)[] = [];
 
 	// Local and global IP block queries
-	for (let i = 0; i < users.length; i++) {
+	while (users.length) {
 		const bkusers = users.splice(0, 25);
 		if (!bkusers.length) {
 			continue;
@@ -99,13 +99,12 @@ const markBlockedIPLinks = (userLinks: Record<string, JQuery[]>) => {
 				bkip = bkip.toUpperCase();
 			}
 
-			if (mw.storage.getObject(OPTIONS.storageKeyBlocked + bkip)) {
-				const response = mw.storage.getObject(
-					OPTIONS.storageKeyBlocked + bkip
-				) as QueryLocalAndGlobalBlocksResponse;
-
-				if (response['query']?.blocks) {
-					markLocalBlocks({response, userLinks});
+			const cached = mw.storage.getObject(OPTIONS.storageKeyBlocked + bkip) as
+				| QueryLocalAndGlobalBlocksResponse
+				| undefined;
+			if (cached) {
+				if (cached['query']?.blocks) {
+					markLocalBlocks({response: cached, userLinks});
 				}
 
 				continue;

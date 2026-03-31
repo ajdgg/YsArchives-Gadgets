@@ -11,17 +11,6 @@ const markUserRights = ($content: JQuery): void => {
 		return;
 	}
 
-	const $userLinks: JQuery<HTMLAnchorElement>[] = [];
-	for (const links of Object.values(userLinks)) {
-		for (const link of links) {
-			$userLinks.push(link);
-		}
-	}
-
-	if (!$userLinks.length) {
-		return;
-	}
-
 	const promises: (() => Promise<void>)[] = [];
 
 	while (users.length) {
@@ -42,7 +31,14 @@ const markUserRights = ($content: JQuery): void => {
 				console.error('[MarkRights] Ajax error:', error);
 			}
 
-			appendUserRightsMark($userLinks, userGroups);
+			const batchUserLinks: Record<string, JQuery<HTMLAnchorElement>[]> = {};
+			for (const username of ususers) {
+				if (userLinks[username]) {
+					batchUserLinks[username] = userLinks[username];
+				}
+			}
+
+			appendUserRightsMark(batchUserLinks, userGroups);
 		};
 	}
 
